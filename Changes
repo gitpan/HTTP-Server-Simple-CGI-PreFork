@@ -1,5 +1,8 @@
 Revision history for Perl extension Maplat.
 
+1.01  Mon Oct 18 10:00:00 2011
+	- Fixed some bugs
+
 1.00  Mon Oct 17 12:00:00 2011
 	- Initial version of HTTP::Server::Simple::PreFork
 

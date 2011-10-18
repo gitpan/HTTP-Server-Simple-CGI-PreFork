@@ -5,7 +5,7 @@ use warnings;
 use Socket;
 use Socket6;
 
-our $VERSION = 1.0;
+our $VERSION = 1.1;
 
 use base qw[HTTP::Server::Simple::CGI];
 
@@ -236,6 +236,25 @@ sub run {
 
     }
 
+    # Ok now fix broken Net::Server*SSL* handling by putting the the SSL options into ARGV
+        my @ssl_args = qw(
+        SSL_server
+        SSL_use_cert
+        SSL_verify_mode
+        SSL_key_file
+        SSL_cert_file
+        SSL_ca_path
+        SSL_ca_file
+        SSL_cipher_list
+        SSL_passwd_cb
+        SSL_error_callback
+        SSL_max_getline_length
+    );
+    foreach my $ssl_arg (@ssl_args) {
+        if(defined($config{$ssl_arg})) {
+            push @ARGV, '--' . $ssl_arg . "=" . $config{$ssl_arg};
+        }
+    }
     
     return $self->SUPER::run(%config); # Call parent run()  
 }
@@ -245,7 +264,7 @@ __END__
 
 =head1 NAME
 
-HTTP::Server::Simple::PreFork - Turn HSS into a a preforking webserver and enable SSL
+HTTP::Server::Simple::CGI::PreFork - Turn HSS into a preforking webserver and enable SSL
 
 =head1 SYNOPSIS
 
@@ -309,7 +328,7 @@ to add some extra options (required for the underlying Net::Server classes, some
 usually does the trick:
 
 $webserver->run(usessl => 1,
-                proto => 'ssleay');
+                proto => 'ssleay',
                 "--SSL_key_file"=> 'mysite.key',
                 "--SSL_cert_file"=>'mysite.crt',
                 );
