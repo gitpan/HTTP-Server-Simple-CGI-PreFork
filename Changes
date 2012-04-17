@@ -1,6 +1,9 @@
 Revision history for Perl extension Maplat.
 
-1.01  Mon Oct 18 10:00:00 2011
+1.2  Tue Apr 17 12:00:00 2012
+	- Better handling of Chrome futility connections
+
+1.1  Mon Oct 18 10:00:00 2011
 	- Fixed some bugs
 
 1.00  Mon Oct 17 12:00:00 2011

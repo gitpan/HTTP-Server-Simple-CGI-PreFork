@@ -5,7 +5,7 @@ use warnings;
 use Socket;
 use Socket6;
 
-our $VERSION = 1.1;
+our $VERSION = 1.2;
 
 use base qw[HTTP::Server::Simple::CGI];
 
@@ -202,6 +202,12 @@ sub run {
         
                 $proto ||= "HTTP/0.9";
         
+                # Google-Chrome, Chromium and others sometimes make "futility connections", e.g.
+                # the open a connection, do nothing 
+                if(!defined($request_uri) || $request_uri eq '') {
+                    $self->bad_request;
+                    return;
+                }
                 my ( $file, $query_string )
                     = ( $request_uri =~ /([^?]*)(?:\?(.*))?/s );    # split at ?
         
