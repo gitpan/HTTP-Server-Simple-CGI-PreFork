@@ -3,9 +3,9 @@ package HTTP::Server::Simple::CGI::PreFork;
 use strict;
 use warnings;
 use Socket;
-use Socket6;
+#use Socket6 qw[unpack_sockaddr_in6];
 
-our $VERSION = 1.2;
+our $VERSION = 2.0;
 
 use base qw[HTTP::Server::Simple::CGI];
 
@@ -203,7 +203,7 @@ sub run {
                 $proto ||= "HTTP/0.9";
         
                 # Google-Chrome, Chromium and others sometimes make "futility connections", e.g.
-                # the open a connection, do nothing 
+                # they open a connection, do nothing and just close the connection after a few seconds
                 if(!defined($request_uri) || $request_uri eq '') {
                     $self->bad_request;
                     return;
@@ -349,14 +349,25 @@ Internal functions that overrides the HTTP::Server::Simple::CGI run function. Ju
 This module overrides also the pure IPv4 handling of HTTP::Server::Simple::CGI and turns
 it into an IPv4/IPv6 multimode server.
 
-Only caveat here is, that you need the Net::Server modules in version
-0.99.6.1 or higher. Version 0.99 and lower only supports IPv4.
+Only caveat here is, that you need the Net::Server modules in version 2.0
+or higher. If you still use Net::Server 0.99.6.*, you should install
+HTTP::Server::Simple::CGI::PreFork 1.2 from BackPan. 
 
-For some backward compatibility issues, the build requirements do *not* automatically pull
-that Net::Server version (only "0.99 or higher"). It's up to you to check that the correct
-version is installed.
+Net::Server version 0.99 and lower only supports IPv4.
 
-=head1 WARNING
+=head1 Possible incompatibilities with your computer
+
+Older versions of HSSC::Prefork did not automatically require the IPv6 modules on installation.
+This behaviour has changed, starting at version 2.0. This is in accordance with with RFC6540, titled
+"IPv6 Support Required for All IP-Capable Nodes". If you don't have an IPv6 address, thats OK (or more
+precisely *your* problem). But the software now assumes that your system is technicaly capable of handling 
+IPv6 connections, even if you don't have an IPv6 uplink at the moment.
+
+Doing it this way simplifies many future tasks. Anyway, if your system is old enough to be incapable of
+handling IPv6... according to RFC6540 you are not connected to what is nowadays defined as "the internet".
+
+
+=head1 QUICK-HACK-WARNING
 
 This module "patches" HTTP::Server::Simple by overloading one
 of the functions. Updating HTTP::Server::Simple *might* break
@@ -365,11 +376,12 @@ updates before updating a production system!
 
 =head1 AUTHOR
 
-Rene Schickbauer, E<lt>rene.schickbauer@gmail.comE<gt>
+Rene Schickbauer, E<lt>rene.schickbauer@magnapowertrain.comE<gt>
 
 This module borrows heavily from the follfowing modules:
 
 HTTP::Server::Simple by Jesse Vincent
+
 Net::Server by Paul T. Seamons
 
 =head1 LICENSE

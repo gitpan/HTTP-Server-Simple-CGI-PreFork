@@ -1,5 +1,8 @@
 Revision history for Perl extension Maplat.
 
+2.00  Tue Jun 26 11:30:00 2012
+	- Adapted for Net::Server 2.0 (with full IPv6 support)
+
 1.2  Tue Apr 17 12:00:00 2012
 	- Better handling of Chrome futility connections
 

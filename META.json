@@ -4,7 +4,7 @@
       "Rene Schickbauer <rene.schickbauer@magnapowertrain.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.120351",
+   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120630",
    "license" : [
       "unknown"
    ],
@@ -35,7 +35,7 @@
             "HTTP::Server::Simple" : "0.44",
             "IO::Socket::INET6" : "0",
             "Net::SSLeay" : "0",
-            "Net::Server" : "0",
+            "Net::Server" : "2",
             "Net::Server::PreFork" : "0",
             "Net::Server::Proto::SSLEAY" : "0",
             "Net::Server::Single" : "0",
@@ -44,5 +44,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "1.2"
+   "version" : "2"
 }

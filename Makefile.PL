@@ -10,7 +10,7 @@ WriteMakefile(
     "HTTP::Server::Simple" => 0.44,
     "IO::Socket::INET6" => 0,
     "Socket6"           => 0,
-    "Net::Server"       => 0,
+    "Net::Server"       => 2,
     "Net::Server::PreFork"    => 0,
     "Net::Server::Single"     => 0,
     "Net::Server::Proto::SSLEAY" => 0,
