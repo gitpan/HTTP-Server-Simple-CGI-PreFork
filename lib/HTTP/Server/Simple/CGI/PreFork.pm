@@ -2,10 +2,10 @@ package HTTP::Server::Simple::CGI::PreFork;
 
 use strict;
 use warnings;
-use Socket;
+use Socket ':all';
 #use Socket6 qw[unpack_sockaddr_in6];
 
-our $VERSION = 2.0;
+our $VERSION = 3.0;
 
 use base qw[HTTP::Server::Simple::CGI];
 
@@ -160,7 +160,9 @@ sub run {
                 binmode STDOUT, ':raw';
                 
                 my $remote_sockaddr = getpeername( $self->stdio_handle );
+                print STDERR "len: " . length($remote_sockaddr) . "\n";
                 my ( $iport, $iaddr, $peeraddr );
+
                 if($remote_sockaddr) {
                     eval {
                         # Be fully backwards compatible
@@ -169,11 +171,13 @@ sub run {
                         1;
                     } or do {
                         # Handle cases where the $remote_sockaddr is an IPv6 structure
+                        print STDERR $@ . "\n";
                         eval {
                             ( $iport, $iaddr ) = unpack_sockaddr_in6($remote_sockaddr);
                             $peeraddr = inet_ntop(AF_INET6, $iaddr);
                             1;
                         } or do {
+                            print STDERR $@ . "\n";
                             # What is the best way to handle an unparseable $remote_sockaddr?
                             # Will IPv6 be the "old protocol" one day in our lifetime to be superceded
                             # by something even more complex?

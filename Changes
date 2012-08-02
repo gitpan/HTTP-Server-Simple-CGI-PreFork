@@ -1,5 +1,9 @@
 Revision history for Perl extension Maplat.
 
+3.00  Thu Aug 02 15:30:00 2012
+	- Fix for current Socket modules (Socket.pm changed default exports and broke my
+IPv6 handling)
+
 2.00  Tue Jun 26 11:30:00 2012
 	- Adapted for Net::Server 2.0 (with full IPv6 support)
 
