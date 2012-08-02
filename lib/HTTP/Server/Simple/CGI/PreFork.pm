@@ -5,7 +5,7 @@ use warnings;
 use Socket ':all';
 #use Socket6 qw[unpack_sockaddr_in6];
 
-our $VERSION = 3.0;
+our $VERSION = 3.1;
 
 use base qw[HTTP::Server::Simple::CGI];
 

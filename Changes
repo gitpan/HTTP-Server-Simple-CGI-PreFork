@@ -1,5 +1,8 @@
 Revision history for Perl extension Maplat.
 
+3.10  Thu Aug 02 15:50:00 2012
+    - Bugfix for the Bugfix
+
 3.00  Thu Aug 02 15:30:00 2012
 	- Fix for current Socket modules (Socket.pm changed default exports and broke my
 IPv6 handling)
