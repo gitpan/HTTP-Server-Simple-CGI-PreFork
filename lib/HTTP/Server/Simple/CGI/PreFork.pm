@@ -5,7 +5,8 @@ use warnings;
 use Socket ':all';
 #use Socket6 qw[unpack_sockaddr_in6];
 
-our $VERSION = 3.2;
+our $VERSION = 4.0;
+use Carp;
 
 use base qw[HTTP::Server::Simple::CGI];
 
@@ -52,7 +53,6 @@ sub run {
             # Create a callback closure that is invoked for each incoming request;
             # the $self above is bound into the closure.
             sub {
-        
                 $self->stdio_handle(*STDIN) unless $self->stdio_handle;
         
                 # Default to unencoded, raw data out.
@@ -61,6 +61,10 @@ sub run {
                 #binmode STDOUT, ':raw';
                 
                 my $remote_sockaddr = getpeername( $self->stdio_handle );
+                if(!$remote_sockaddr && defined($main::_realpeername)) {
+                    $remote_sockaddr = $main::_realpeername;
+                }
+                
                 my ( $iport, $iaddr, $peeraddr );
                 if($remote_sockaddr) {
                     eval {
@@ -160,6 +164,10 @@ sub run {
                 binmode STDOUT, ':raw';
                 
                 my $remote_sockaddr = getpeername( $self->stdio_handle );
+                if(!$remote_sockaddr && defined($main::_realpeername)) {
+                    $remote_sockaddr = $main::_realpeername;
+                }
+                
                 my ( $iport, $iaddr, $peeraddr );
 
                 if($remote_sockaddr) {
@@ -265,7 +273,54 @@ sub run {
         }
     }
     
-    return $self->SUPER::run(%config); # Call parent run()  
+    # Don't call super, just do out stuff here, as we need some changes anyway
+    #return $self->SUPER::run(%config); # Call parent run()
+    
+    #*{__PACKAGE__ . "::_process_request"} = sub {
+    {
+        my $server = $self->net_server;
+    
+        local $SIG{CHLD} = 'IGNORE';    # reap child processes
+    
+        # $pkg is generated anew for each invocation to "run"
+        # Just so we can use different net_server() implementations
+        # in different runs.
+        my $pkg = join '::', ref($self), "NetServer";
+        my $thispkg = ref($self);
+    
+        no strict 'refs';
+        *{"$pkg\::process_request"} = $self->_process_request;
+    
+        if ($server) {
+            require join( '/', split /::/, $server ) . '.pm';
+            *{"$pkg\::ISA"} = [$server];
+    
+            # clear the environment before every request
+            require HTTP::Server::Simple::CGI;
+            *{"$pkg\::post_accept"} = sub {
+                HTTP::Server::Simple::CGI::Environment->setup_environment;
+                # $self->SUPER::post_accept uses the wrong super package
+                $server->can('post_accept')->(@_);
+            };
+            
+            *{"$pkg\::post_accept_hook"} = sub {
+                my ($xself) = @_;
+                $main::_realpeername = $xself->{server}->{peername};
+            };
+                
+        }
+        else {
+            $self->setup_listener;
+        $self->after_setup_listener();
+            *{"$pkg\::run"} = $self->_default_run;
+        }
+    
+        #local $SIG{HUP} = sub { $SERVER_SHOULD_RUN = 0; };
+    
+        $pkg->run( port => $self->port, @_ );
+    };
+    
+    
 }
 
 1;

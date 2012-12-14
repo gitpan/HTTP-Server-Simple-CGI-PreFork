@@ -1,4 +1,12 @@
-Revision history for Perl extension Maplat.
+Revision history for HSS Prefork
+
+4.00  Fri Dec 14 14:08:00 2012
+    - Net::Server::* and HTTP::Server::Simple do not communicate 
+      the client IP address when SSL is in use. This version of
+      HSS-Prefork fixes this by patching HTTP::Server::Simple which
+      in turn patches Net::Server. And the IP (peername to be exact)
+      is now handed over via $main::_realpeername.
+      Aaaargh! (but it works...)
 
 3.20  Fri Aug 03 13:00:00 2012
     - Remove debugging output
