@@ -3,9 +3,11 @@ package HTTP::Server::Simple::CGI::PreFork;
 use strict;
 use warnings;
 use Socket ':all';
+use IO::Handle;
+
 #use Socket6 qw[unpack_sockaddr_in6];
 
-our $VERSION = 4.0;
+our $VERSION = 5.0;
 use Carp;
 
 use base qw[HTTP::Server::Simple::CGI];
@@ -125,18 +127,28 @@ sub run {
                 );
         
                 # HTTP/0.9 didn't have any headers (I think)
+                my %xheaders;
                 if ( $proto =~ m{HTTP/(\d(\.\d)?)$} and $1 >= 1 ) {
         
                     my $headers = $self->parse_headers
                         or do { $self->bad_request; return };
         
+                    %xheaders = (@$headers);
                     $self->headers($headers);
         
                 }
-        
-                $self->post_setup_hook if $self->can("post_setup_hook");
-        
-                $self->handler;
+                
+                my $do_continue = 1;
+                if(defined($xheaders{Expect} && $xheaders{Expect} =~ /100\-continue/i)) {
+                    $do_continue = $self->handle_continue_header(%xheaders);
+                    flush STDOUT;
+                }
+                
+                if($do_continue) {
+                    $self->post_setup_hook if $self->can("post_setup_hook");
+            
+                    $self->handler;
+                }   
             }
         }
 
@@ -236,18 +248,28 @@ sub run {
                 );
         
                 # HTTP/0.9 didn't have any headers (I think)
+                my %xheaders;
                 if ( $proto =~ m{HTTP/(\d(\.\d)?)$} and $1 >= 1 ) {
         
                     my $headers = $self->parse_headers
                         or do { $self->bad_request; return };
         
+                    %xheaders = (@$headers);
                     $self->headers($headers);
         
                 }
-        
-                $self->post_setup_hook if $self->can("post_setup_hook");
-        
-                $self->handler;
+                
+                my $do_continue = 1;
+                if(defined($xheaders{Expect} && $xheaders{Expect} =~ /100\-continue/i)) {
+                    $do_continue = $self->handle_continue_header(%xheaders);
+                    flush STDOUT;
+                }
+                
+                if($do_continue) {
+                    $self->post_setup_hook if $self->can("post_setup_hook");
+            
+                    $self->handler;
+                }
             }
         }
 
@@ -320,6 +342,16 @@ sub run {
         $pkg->run( port => $self->port, @_ );
     };
     
+    
+}
+
+sub handle_continue_header {
+    my ($self, %headers) = @_;
+    my $continue = 1;
+    
+    print "HTTP/1.1 100 Continue\r\n";
+    
+    return $continue;
     
 }
 
@@ -401,6 +433,25 @@ $webserver->run(usessl => 1,
 =head2 run
 
 Internal functions that overrides the HTTP::Server::Simple::CGI run function. Just as explained above.
+
+=head2 handle_continue_header
+
+Overrideable function that allows to to custom-handle the "100 Continue" status codes. This function
+is called if the client sends a a "Expect: 100-continue" header. It defaults to sending a "100 Continue"
+status line and proceed with the rest of the request.
+
+If you want to override this, for example to check upload size or permissions, subclass this function. You
+will recieve the headers as a hash as the only input (nothing much else has been parsed from the client as of
+this moment in time).
+
+It is your job to send/print the appropriate status line header, either "100 Continue" or the appropriate error code.
+Return true if you want HSS::Prefork to continue data transfer and finish setting up the CGI environment for the request
+or false to abort.
+
+BEWARE: Since only the headers have been parsed at this point of time, you don't have the full CGI kaboodle at your disposal.
+The way HSS:Prefork overrides the base modules, the internal setup phase is not complete and you should only use the headers
+provided to make a basic decision if you want to continue and make a full check later (permissions, client IP, whatever) on,
+just as you would when the client wouldn't have send the Expect-Header
 
 =head1 IPv6
 
